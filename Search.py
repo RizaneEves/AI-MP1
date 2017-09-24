@@ -6,11 +6,16 @@ import Utilities
 Node class to represent different nodes in the maze
 '''
 class Node:
-    def __init__(self, x, y, cost, parent):
+    def __init__(self, x, y, cost, parent, heuristic = 1):
         self.x = x
         self.y = y
         self.cost = cost
+        self.heuristic = heuristic
         self.parent = parent
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y and self.cost == other.cost and self.heuristic == other.heuristic
+
 
 '''
 Implementation of breadth-first search. Takes a 2D maze, start position and goal position as input and
@@ -58,6 +63,31 @@ def DFS(maze, start, goal):
                 visited.append(adjacent)
                 frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current))
 
+
+'''
+Implementation of greedy best first search. Takes a 2D maze, start position and goal position as input and
+returns a Node representing the goal state once it is reached.
+'''
+def GBFS(maze, start, goal):
+    visited = []
+    frontier = []
+    expanded = 0
+    visited.append(start)
+    s = Node(start[0], start[1], 0, None, Utilities.getManhattanDistance(start, goal))
+    frontier.append(s)
+
+    while frontier:
+        print("Expanded: " + str(expanded) + "\n")
+        current = Utilities.getLowestHeuristicNode(frontier)
+        frontier.remove(current)
+        expanded+=1
+        if current.x == goal[0] and current.y == goal[1]:
+            return current, expanded
+        for adjacent in Utilities.getAdjacentNodes(maze, (current.x, current.y)):
+            if adjacent not in visited:
+                visited.append(adjacent)
+                frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, Utilities.getManhattanDistance(adjacent, goal)))
+
 '''
 Uses the output of basic search functions to print a report and print the solution
 to fileName
@@ -95,4 +125,4 @@ def executeBasicSearch(searchFunc, mazeFileName, outputFileName):
 #executeBasicSearch(BFS, "bigMaze.txt", "bigMazeSol.txt")
 
 
-executeBasicSearch(DFS, "mediumMaze.txt", "mediumMazeSol.txt")
+executeBasicSearch(GBFS, "bigMaze.txt", "bigMazeSol.txt")

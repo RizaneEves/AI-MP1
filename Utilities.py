@@ -1,15 +1,24 @@
 import numpy as np
 
+'''
+Creates a 2D array of characters to represent the maze extracted from fileName
+'''
 def parseMaze(fileName):
     path = './' + fileName
     with open(path) as file:
         maze = [[c for c in line.strip()] for line in file]
     return maze
 
+'''
+Writes a 2D array of characters representing a maze to fileName
+'''
 def writeMazeToFile(maze, fileName):
     np.savetxt(fileName, np.array(maze), fmt = '%s', delimiter = '')
 
 
+'''
+Gets the coordinates of the starting point of the maze as a pair (x,y)
+'''
 def getStartPoint(maze):
     for i in range(len(maze)):
         for j in range(len(maze[0])):
@@ -17,6 +26,9 @@ def getStartPoint(maze):
                 return i, j
     return None
 
+'''
+Gets a list of goal points in the maze as pairs (x,y)
+'''
 def getGoalPoints(maze):
     goalPoints = []
     for i in range(len(maze)):
@@ -25,7 +37,9 @@ def getGoalPoints(maze):
                 goalPoints.append((i, j))
     return goalPoints
 
-
+'''
+Gets a list of walkable adjacent nodes to the specified node
+'''
 def getAdjacentNodes(maze, node):
     adjacentNodes = []
     x = node[0]
@@ -36,7 +50,9 @@ def getAdjacentNodes(maze, node):
             adjacentNodes.append(node)
     return adjacentNodes
 
-
+'''
+Checks if the specified node is a valid and walkable node in the maze
+'''
 def isWalkableNode(maze, node):
     cols = len(maze)
     rows = len(maze[0])
@@ -47,3 +63,22 @@ def isWalkableNode(maze, node):
             return True
         return False
     return False
+
+'''
+Returns the Node with the lowest heuristic value from a list of Nodes
+'''
+def getLowestHeuristicNode(nodes):
+    lowestHeuristic = nodes[0].heuristic
+    lowestHeuristicNode = nodes[0]
+    for node in nodes:
+        h = node.heuristic
+        if(h < lowestHeuristic):
+            lowestHeuristic = h
+            lowestHeuristicNode = node
+    return lowestHeuristicNode
+
+'''
+Calculates the Manhattan Distance between 2 points
+'''
+def getManhattanDistance(node1, node2):
+    return abs(node1[0] - node2[0]) + abs(node1[1] - node2[1])
