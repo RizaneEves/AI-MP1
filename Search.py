@@ -89,6 +89,31 @@ def GBFS(maze, start, goal):
                 frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, Utilities.getManhattanDistance(adjacent, goal)))
 
 '''
+Implementation of A* search. Takes a 2D maze, start position and goal position as input and
+returns a Node representing the goal state once it is reached. Next node chosen is based on lowest
+heuristic for A*
+'''
+def a_star1(maze, start, goal):
+    visited = []
+    frontier = []
+    expanded = 0
+    visited.append(start)
+    s = Node(start[0], start[1], 0, None, Utilities.getManhattanDistance(start, goal))
+    frontier.append(s)
+
+    while frontier:
+        print("Expanded: " + str(expanded) + "\n")
+        current = Utilities.getLowestHeuristicNode_astar(frontier)
+        frontier.remove(current)
+        expanded+=1
+        if current.x == goal[0] and current.y == goal[1]:
+            return current, expanded
+        for adjacent in Utilities.getAdjacentNodes(maze, (current.x, current.y)):
+            if adjacent not in visited:
+                visited.append(adjacent)
+                frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, Utilities.getManhattanDistance(adjacent, goal)))
+                
+'''
 Uses the output of basic search functions to print a report and print the solution
 to fileName
 '''
