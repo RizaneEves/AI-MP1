@@ -78,6 +78,19 @@ def getLowestHeuristicNode(nodes):
     return lowestHeuristicNode
 
 '''
+Returns the Node with the lowest heuristic value (path cost + Manhattan distance) from a list of Nodes for A* search
+'''
+def getLowestHeuristicNode_astar(nodes):
+    lowestHeuristic = nodes[0].heuristic + nodes[0].cost
+    lowestHeuristicNode = nodes[0]
+    for node in nodes:
+        h = node.heuristic + node.cost
+        if(h < lowestHeuristic):
+            lowestHeuristic = h
+            lowestHeuristicNode = node
+    return lowestHeuristicNode
+
+'''
 Calculates the Manhattan Distance between 2 points
 '''
 def getManhattanDistance(node1, node2):
