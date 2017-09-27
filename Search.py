@@ -6,15 +6,16 @@ import Utilities
 Node class to represent different nodes in the maze
 '''
 class Node:
-    def __init__(self, x, y, cost, parent, heuristic = 1):
+    def __init__(self, x, y, cost, parent, heuristic = 1, visitedGoals = []):
         self.x = x
         self.y = y
         self.cost = cost
         self.heuristic = heuristic
         self.parent = parent
+        self.visitedGoals = visitedGoals
 
     def __eq__(self, other):
-        return self.x == other.x and self.y == other.y and self.cost == other.cost and self.heuristic == other.heuristic
+        return self.x == other.x and self.y == other.y and self.cost == other.cost and self.heuristic == other.heuristic and self.visitedGoals == other.visitedGoals
 
 
 '''
@@ -112,6 +113,32 @@ def a_star1(maze, start, goal):
             if adjacent not in visited:
                 visited.append(adjacent)
                 frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, Utilities.getManhattanDistance(adjacent, goal)))
+'''
+Possible implementation of A* with multiple goal nodes with a naive heuristic
+'''
+def a_star3(maze, start, goals):
+    visited = []
+    frontier = []
+    expanded = 0
+    visited.append(start)
+    startVisitedGoals = [0 for goal in goals]
+    allVisitedGoals = [1 for goal in goals]
+    s = Node(start[0], start[1], 0, None, Utilities.getManhattanDistance(start, Utilities.getClosestGoal(start, goals)), startVisitedGoals)
+    frontier.append(s)
+
+    while frontier:
+        print("Expanded: " + str(expanded) + "\n")
+        current = Utilities.getLowestHeuristicNode_astar(frontier)
+        frontier.remove(current)
+        expanded+=1
+        if (((current.x, current.y) in goals) and current.visitedGoals == allVisitedGoals):
+            return current, expanded
+        for adjacent in Utilities.getAdjacentNodes(maze, (current.x, current.y)):
+            if adjacent not in visited:
+                visited.append(adjacent)
+                unvisitedGoals = [goals[i] for i in len(goals) if current.visitedGoals[i] == 0]
+                frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, Utilities.getManhattanDistance(adjacent, Utilities.getClosestGoal(adjacent, unvisitedGoals))))
+
 
  '''
 Implementation of A* search. Takes a 2D maze, start position and multiple goal positions as input and
