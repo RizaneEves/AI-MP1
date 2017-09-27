@@ -121,8 +121,13 @@ def a_star3(maze, start, goals):
     frontier = []
     expanded = 0
     visited.append(start)
+
+    # At first, no goals are visited and is represented by a bit array of all 0s
     startVisitedGoals = [0 for goal in goals]
+
+    # An array for comparison that indicates all goals have been visited
     allVisitedGoals = [1 for goal in goals]
+
     s = Node(start[0], start[1], 0, None, Utilities.getManhattanDistance(start, Utilities.getClosestGoal(start, goals)), startVisitedGoals)
     frontier.append(s)
 
@@ -131,17 +136,25 @@ def a_star3(maze, start, goals):
         current = Utilities.getLowestHeuristicNode_astar(frontier)
         frontier.remove(current)
         expanded+=1
+        
+        # Additional check to make sure that we've reached a goal and all goals have been visited
         if (((current.x, current.y) in goals) and current.visitedGoals == allVisitedGoals):
             return current, expanded
         for adjacent in Utilities.getAdjacentNodes(maze, (current.x, current.y)):
             if adjacent not in visited:
                 visited.append(adjacent)
                 visitedGoals = current.visitedGoals
+
+                # Check if this adjacent node is a goal node and modify visitedGoals based on that
                 for i in range(len(goals)):
                     if (goals[i][0], goals[i][1]) == (adjacent[0], adjacent[1]):
                         visitedGoals[i] = 1
-                unvisitedGoals = [goals[i] for i in range(len(goals)) if current.visitedGoals[i] == 0]
+
+                # Get all goals that have not yet been visited in the current state
+                unvisitedGoals = [goals[i] for i in range(len(goals)) if visitedGoals[i] == 0]
                 minDist = 0
+
+                # If all goals have been visited, then we are at a goal node and our distance to the closest goal node is 0.
                 if(unvisitedGoals != []):
                     minDist = Utilities.getManhattanDistance(adjacent, Utilities.getClosestGoal(adjacent, unvisitedGoals))
                 frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, minDist, visitedGoals))
