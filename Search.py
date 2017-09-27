@@ -112,6 +112,19 @@ def a_star1(maze, start, goal):
             if adjacent not in visited:
                 visited.append(adjacent)
                 frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, Utilities.getManhattanDistance(adjacent, goal)))
+
+ '''
+Implementation of A* search. Takes a 2D maze, start position and multiple goal positions as input and
+returns a Node representing the goal state once it is reached. Next node chosen is based on lowest
+heuristic for A*
+'''
+def a_star2(maze, start, goals):
+    while len(goals)>0:
+        nearest = Utilities.getClosestGoal(start,goals)
+        a_star1(maze,start,nearest)
+        goals.remove(nearest)
+        start = nearest               
+                
                 
 '''
 Uses the output of basic search functions to print a report and print the solution
