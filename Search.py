@@ -136,11 +136,11 @@ def a_star3(maze, start, goals):
         for adjacent in Utilities.getAdjacentNodes(maze, (current.x, current.y)):
             if adjacent not in visited:
                 visited.append(adjacent)
-                unvisitedGoals = [goals[i] for i in len(goals) if current.visitedGoals[i] == 0]
+                unvisitedGoals = [goals[i] for i in range(len(goals)) if current.visitedGoals[i] == 0]
                 frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, Utilities.getManhattanDistance(adjacent, Utilities.getClosestGoal(adjacent, unvisitedGoals))))
 
 
- '''
+'''
 Implementation of A* search. Takes a 2D maze, start position and multiple goal positions as input and
 returns a Node representing the goal state once it is reached. Next node chosen is based on lowest
 heuristic for A*
@@ -185,7 +185,14 @@ def executeBasicSearch(searchFunc, mazeFileName, outputFileName):
 
 
 
+def executeAdvancedSearch(searchFunc, mazeFileName, outputFileName):
+    maze = Utilities.parseMaze(mazeFileName)
+    start = Utilities.getStartPoint(maze)
+    goals = Utilities.getGoalPoints(maze)
+    goal, expanded = searchFunc(maze, start, goals)
+    printBasicReport(maze, goal, expanded, outputFileName)
+
 #executeBasicSearch(BFS, "bigMaze.txt", "bigMazeSol.txt")
 
 
-executeBasicSearch(GBFS, "bigMaze.txt", "bigMazeSol.txt")
+executeAdvancedSearch(a_star3, "tinySearch.txt", "tinySearchSol.txt")
