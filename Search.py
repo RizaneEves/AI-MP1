@@ -145,8 +145,6 @@ def executeBasicSearch(searchFunc, mazeFileName, outputFileName):
 
 
 
-
-
 #executeBasicSearch(BFS, "bigMaze.txt", "bigMazeSol.txt")
 
 

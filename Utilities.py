@@ -95,3 +95,18 @@ Calculates the Manhattan Distance between 2 points
 '''
 def getManhattanDistance(node1, node2):
     return abs(node1[0] - node2[0]) + abs(node1[1] - node2[1])
+
+
+'''
+Returns the goal nearest to start
+'''
+def getClosestGoal(start, goals):
+    dist = [getManhattanDistance(start, goal) for goal in goals]
+    min = dist[0]
+    closestGoal = goals[0]
+    for i in range(len(dist)):
+        if dist[i] < min:
+            min = dist[i]
+            closestGoal = goals[i]
+
+    return closestGoal
