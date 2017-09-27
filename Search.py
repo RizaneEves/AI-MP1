@@ -136,8 +136,15 @@ def a_star3(maze, start, goals):
         for adjacent in Utilities.getAdjacentNodes(maze, (current.x, current.y)):
             if adjacent not in visited:
                 visited.append(adjacent)
+                visitedGoals = current.visitedGoals
+                for i in range(len(goals)):
+                    if (goals[i][0], goals[i][1]) == (adjacent[0], adjacent[1]):
+                        visitedGoals[i] = 1
                 unvisitedGoals = [goals[i] for i in range(len(goals)) if current.visitedGoals[i] == 0]
-                frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, Utilities.getManhattanDistance(adjacent, Utilities.getClosestGoal(adjacent, unvisitedGoals))))
+                minDist = 0
+                if(unvisitedGoals != []):
+                    minDist = Utilities.getManhattanDistance(adjacent, Utilities.getClosestGoal(adjacent, unvisitedGoals))
+                frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, minDist, visitedGoals))
 
 
 '''
