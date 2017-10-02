@@ -115,73 +115,9 @@ def a_star1(maze, start, goal):
             if adjacent not in visited:
                 visited.append(adjacent)
                 frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, Utilities.getManhattanDistance(adjacent, goal)))
-'''
-Possible implementation of A* with multiple goal nodes with a naive heuristic
-'''
-def a_star3(maze, start, goals):
-    visited = {}
-    frontier = []
-    expanded = 0
-
-    # At first, no goals are visited and is represented by a bit array of all 0s
-    startVisitedGoals = [0 for goal in goals]
-
-    # An array for comparison that indicates all goals have been visited
-    allVisitedGoals = [1 for goal in goals]
-
-    s = Node(start[0], start[1], 0, None, Utilities.getManhattanDistance(start, Utilities.getClosestGoal(start, goals)), startVisitedGoals)
-    frontier.append(s)
-
-    visited[start] = []
-    visited[start].append(startVisitedGoals)
-
-    print(goals)
-
-    while frontier:
-        #print("Expanded: " + str(expanded) + "\n")
-        current = Utilities.getLowestHeuristicNode_astar(frontier)
-        frontier.remove(current)
-        expanded+=1
-
-
-        # Additional check to make sure that we've reached a goal and all goals have been visited
-        if (((current.x, current.y) in goals) and current.visitedGoals == allVisitedGoals):
-            return current, expanded
-        for adjacent in Utilities.getAdjacentNodes(maze, (current.x, current.y)):
-
-            visitedGoals = current.visitedGoals[:]
-
-            # Check if this adjacent node is a goal node and modify visitedGoals based on that
-            for i in range(len(goals)):
-                if (goals[i][0], goals[i][1]) == (adjacent[0], adjacent[1]):
-                    visitedGoals[i] = 1
-            #print (visitedGoals)
-
-            notExists = False
-            if(adjacent not in visited):
-                notExists = True
-
-            if (notExists or (visitedGoals not in visited[adjacent])):
-
-                if(notExists):
-                    visited[adjacent] = []
-
-                #print(notExists)
-                visited[adjacent].append(visitedGoals[:])
-
-                #print(visited)
-                # Get all goals that have not yet been visited in the current state
-                unvisitedGoals = [goals[i] for i in range(len(goals)) if visitedGoals[i] == 0]
-                #print(unvisitedGoals)
-                minDist = 0
-
-                # If all goals have been visited, then we are at a goal node and our distance to the closest goal node is 0.
-                if(unvisitedGoals != []):
-                    minDist = Utilities.getManhattanDistance(adjacent, Utilities.getClosestGoal(adjacent, unvisitedGoals[:]))
-                frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, minDist, visitedGoals[:]))
 
 '''
-Possible implementation of A* with multiple goal nodes with a naive heuristic
+Possible implementation of A* with multiple goal nodes with an admissible heuristic
 '''
 def a_star4(maze, start, goals):
     visited = {}
@@ -196,12 +132,13 @@ def a_star4(maze, start, goals):
 
     goalBinaries = {}
     for i in range(numGoals):
-        goalBinaries[goals[i]] = pow(2, i)
+        goalBinaries[goals[i]] = pow(2, numGoals - i - 1)
 
     heuristicStorage = {}
 
+    shortestPaths = getShortestPaths(goals, goalBinaries)
 
-    d = getMinDist(start[0], start[1],goals, startVisitedGoals)
+    d = getMinDist(start, startVisitedGoals, goals, goalBinaries, shortestPaths)
     heuristicStorage[start, startVisitedGoals] = d
     s = Node(start[0], start[1], 0, None, d, startVisitedGoals)
     frontier.append((d,s))
@@ -239,7 +176,7 @@ def a_star4(maze, start, goals):
                     visited[adjacent] = []
 
 
-                minDist = heuristicStorage.get((adjacent, visitedGoals), getMinDist(adjacent[0], adjacent[1], goals, visitedGoals))
+                minDist = heuristicStorage.get((adjacent, visitedGoals), getMinDist(adjacent, visitedGoals, goals, goalBinaries, shortestPaths))
                 heuristicStorage[(adjacent, visitedGoals)] = minDist
 
 
@@ -248,18 +185,35 @@ def a_star4(maze, start, goals):
                 heapq.heappush(frontier, (1 + current.cost + minDist, Node(adjacent[0], adjacent[1], 1 + current.cost, current, minDist, visitedGoals)))
 
 
-def getMinDist(x,y,goals, visitedGoals):
-    numGoals = len(goals)
-    visitedGoalsStr = (str(visitedGoals)).rjust(numGoals, '0')
-    unvisitedGoals = [goals[i] for i in range(len(goals)) if visitedGoalsStr[i] == 0]
-    # print(unvisitedGoals)
-    minDist = 0
+'''
+Given a list of goals and a dictionary mapping goals to integers whose binary represtentation denote that if the ith bit is 1 then the ith goal has been
+visited, get the length of the shortest Manhattan path for each goal for all possible states and memoize it in a dictionary
+'''
+def getShortestPaths(goals, goalBinaries):
 
-    # If all goals have been visited, then we are at a goal node and our distance to the closest goal node is 0.
-    if (unvisitedGoals != []):
-            closestNode = Utilities.getClosestGoal((x, y), unvisitedGoals)
-            minDist = Utilities.getManhattanDistance((x, y), closestNode)
-    return minDist
+    n = len(goals)
+    allVisited = pow(2, n) - 1
+    shortestPaths = {}
+
+    for i in range(n):
+        shortestPaths[(goals[i], allVisited)] = 0
+
+    for v in range(allVisited - 1, 0, -1):
+        for i in range(n):
+            visitedGoalsStr = (str(bin(v)))[2:].rjust(n, '0')
+            unvisitedGoals = [goals[j] for j in range(n) if visitedGoalsStr[j] == '0']
+            arr = [Utilities.getManhattanDistance(goals[i], g) + shortestPaths[(g, v | goalBinaries[g])] for g in unvisitedGoals]
+            shortestPaths[(goals[i], v)] = min (arr)
+
+    return shortestPaths
+
+'''
+Finds the length of the shortest path from the current node to a configuration where all goal nodes have been explored.
+'''
+def getMinDist(current, visitedGoals, goals, goalBinaries, shortestPaths):
+
+    n = len(goals)
+    return min ([Utilities.getManhattanDistance(current, goals[i]) + shortestPaths[goals[i], visitedGoals | goalBinaries[goals[i]]] for i in range(n)])
 
 
 '''
@@ -352,6 +306,7 @@ def printAdvancedReport(maze, goal, goals, expanded, fileName):
             else:
                 maze[current.x][current.y] = count
             count -= 1
+            goals.remove((current.x, current.y))
         else:
             maze[current.x][current.y] = '.'
         current = current.parent
@@ -395,4 +350,4 @@ def executeAdvancedSearch(searchFunc, mazeFileName, outputFileName):
 #executeBasicSearch(BFS, "bigMaze.txt", "bigMazeSol.txt")
 
 
-executeAdvancedSearch(a_star4, "smallSearch.txt", "smallSearchSol.txt")
+executeAdvancedSearch(a_star4, "mediumSearch.txt", "mediumSearchSol.txt")
