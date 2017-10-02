@@ -117,10 +117,9 @@ def a_star1(maze, start, goal):
 Possible implementation of A* with multiple goal nodes with a naive heuristic
 '''
 def a_star3(maze, start, goals):
-    visited = []
+    visited = {}
     frontier = []
     expanded = 0
-    visited.append(start)
 
     # At first, no goals are visited and is represented by a bit array of all 0s
     startVisitedGoals = [0 for goal in goals]
@@ -131,27 +130,47 @@ def a_star3(maze, start, goals):
     s = Node(start[0], start[1], 0, None, Utilities.getManhattanDistance(start, Utilities.getClosestGoal(start, goals)), startVisitedGoals)
     frontier.append(s)
 
+    visited[start] = []
+    visited[start].append(startVisitedGoals)
+
+    print(goals)
+
     while frontier:
         print("Expanded: " + str(expanded) + "\n")
         current = Utilities.getLowestHeuristicNode_astar(frontier)
         frontier.remove(current)
         expanded+=1
-        
+
+
         # Additional check to make sure that we've reached a goal and all goals have been visited
         if (((current.x, current.y) in goals) and current.visitedGoals == allVisitedGoals):
             return current, expanded
         for adjacent in Utilities.getAdjacentNodes(maze, (current.x, current.y)):
-            if adjacent not in visited:
-                visited.append(adjacent)
-                visitedGoals = current.visitedGoals
 
-                # Check if this adjacent node is a goal node and modify visitedGoals based on that
-                for i in range(len(goals)):
-                    if (goals[i][0], goals[i][1]) == (adjacent[0], adjacent[1]):
-                        visitedGoals[i] = 1
+            visitedGoals = current.visitedGoals[:]
 
+            # Check if this adjacent node is a goal node and modify visitedGoals based on that
+            for i in range(len(goals)):
+                if (goals[i][0], goals[i][1]) == (adjacent[0], adjacent[1]):
+                    visitedGoals[i] = 1
+            print (visitedGoals)
+
+            notExists = False
+            if(adjacent not in visited):
+                notExists = True
+
+            if (notExists or (visitedGoals not in visited[adjacent])):
+
+                if(notExists):
+                    visited[adjacent] = []
+
+                print(notExists)
+                visited[adjacent].append(visitedGoals)
+
+                print(visited)
                 # Get all goals that have not yet been visited in the current state
                 unvisitedGoals = [goals[i] for i in range(len(goals)) if visitedGoals[i] == 0]
+                print(unvisitedGoals)
                 minDist = 0
 
                 # If all goals have been visited, then we are at a goal node and our distance to the closest goal node is 0.
@@ -190,6 +209,22 @@ def printBasicReport(maze, goal, expanded, fileName):
     print("Path cost: " + str(pathCost) + "\nExpanded: " + str(expanded))
 
 
+def printAdvancedReport(maze, goal, goals, expanded, fileName):
+    pathCost = goal.cost
+    current = goal
+    count = len(goals)
+    while (current.parent is not None):
+        print("Path: (" + str(current.x) + "," + str(current.y) + ")\n")
+        if((current.x, current.y) in goals):
+            maze[current.x][current.y] = str(count)
+            count -= 1
+        else:
+            maze[current.x][current.y] = '.'
+        current = current.parent
+    Utilities.writeMazeToFile(maze, fileName)
+
+    print("Path cost: " + str(pathCost) + "\nExpanded: " + str(expanded))
+
 
 '''
 Helper function that executes the basic search functions. Takes mazeFileName as input maze and
@@ -210,7 +245,7 @@ def executeAdvancedSearch(searchFunc, mazeFileName, outputFileName):
     start = Utilities.getStartPoint(maze)
     goals = Utilities.getGoalPoints(maze)
     goal, expanded = searchFunc(maze, start, goals)
-    printBasicReport(maze, goal, expanded, outputFileName)
+    printAdvancedReport(maze, goal, goals, expanded, outputFileName)
 
 #executeBasicSearch(BFS, "bigMaze.txt", "bigMazeSol.txt")
 
