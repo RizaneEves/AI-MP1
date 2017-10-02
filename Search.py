@@ -2,12 +2,13 @@ from collections import deque
 import Utilities
 import time
 import string
-
+import heapq
+import cProfile
 '''
 Node class to represent different nodes in the maze
 '''
 class Node:
-    def __init__(self, x, y, cost, parent, heuristic = 1, visitedGoals = []):
+    def __init__(self, x, y, cost, parent, heuristic = 1, visitedGoals = 0):
         self.x = x
         self.y = y
         self.cost = cost
@@ -179,6 +180,87 @@ def a_star3(maze, start, goals):
                     minDist = Utilities.getManhattanDistance(adjacent, Utilities.getClosestGoal(adjacent, unvisitedGoals[:]))
                 frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, minDist, visitedGoals[:]))
 
+'''
+Possible implementation of A* with multiple goal nodes with a naive heuristic
+'''
+def a_star4(maze, start, goals):
+    visited = {}
+    frontier = []
+    expanded = 0
+    numGoals = len(goals)
+    # At first, no goals are visited and is represented by a bit array of all 0s
+    startVisitedGoals = 0
+
+    # An array for comparison that indicates all goals have been visited
+    allVisitedGoals = pow(2, numGoals) - 1
+
+    goalBinaries = {}
+    for i in range(numGoals):
+        goalBinaries[goals[i]] = pow(2, i)
+
+    heuristicStorage = {}
+
+
+    d = getMinDist(start[0], start[1],goals, startVisitedGoals)
+    heuristicStorage[start, startVisitedGoals] = d
+    s = Node(start[0], start[1], 0, None, d, startVisitedGoals)
+    frontier.append((d,s))
+
+    visited[start] = []
+    visited[start].append(startVisitedGoals)
+
+    #print(goals)
+
+    while frontier:
+        #print("Expanded: " + str(expanded) + "\n")
+        current = heapq.heappop(frontier)[1]
+        #frontier.remove(current)
+        expanded+=1
+
+
+        # Additional check to make sure that we've reached a goal and all goals have been visited
+        if (((current.x, current.y) in goals) and current.visitedGoals == allVisitedGoals):
+            return current, expanded
+        for adjacent in Utilities.getAdjacentNodes(maze, (current.x, current.y)):
+
+            visitedGoals = current.visitedGoals
+
+            # Check if this adjacent node is a goal node and modify visitedGoals based on that
+
+            visitedGoals = visitedGoals  | goalBinaries.get(adjacent, 0)
+
+            notExists = False
+            if(adjacent not in visited):
+                notExists = True
+
+            if (notExists or (visitedGoals not in visited[adjacent])):
+
+                if(notExists):
+                    visited[adjacent] = []
+
+
+                minDist = heuristicStorage.get((adjacent, visitedGoals), getMinDist(adjacent[0], adjacent[1], goals, visitedGoals))
+                heuristicStorage[(adjacent, visitedGoals)] = minDist
+
+
+                #print(notExists)
+                visited[adjacent].append(visitedGoals)
+                heapq.heappush(frontier, (1 + current.cost + minDist, Node(adjacent[0], adjacent[1], 1 + current.cost, current, minDist, visitedGoals)))
+
+
+def getMinDist(x,y,goals, visitedGoals):
+    numGoals = len(goals)
+    visitedGoalsStr = (str(visitedGoals)).rjust(numGoals, '0')
+    unvisitedGoals = [goals[i] for i in range(len(goals)) if visitedGoalsStr[i] == 0]
+    # print(unvisitedGoals)
+    minDist = 0
+
+    # If all goals have been visited, then we are at a goal node and our distance to the closest goal node is 0.
+    if (unvisitedGoals != []):
+            closestNode = Utilities.getClosestGoal((x, y), unvisitedGoals)
+            minDist = Utilities.getManhattanDistance((x, y), closestNode)
+    return minDist
+
 
 '''
 Implementation of A* search. Takes a 2D maze, start position and multiple goal positions as input and
@@ -313,4 +395,4 @@ def executeAdvancedSearch(searchFunc, mazeFileName, outputFileName):
 #executeBasicSearch(BFS, "bigMaze.txt", "bigMazeSol.txt")
 
 
-executeAdvancedSearch(a_star3, "tinySearch.txt", "tinySearchSol.txt")
+executeAdvancedSearch(a_star4, "smallSearch.txt", "smallSearchSol.txt")
