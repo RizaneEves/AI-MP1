@@ -185,12 +185,23 @@ Implementation of A* search. Takes a 2D maze, start position and multiple goal p
 returns a Node representing the goal state once it is reached. Next node chosen is based on lowest
 heuristic for A*
 '''
-def a_star2(maze, start, goals):
-    while len(goals)>0:
-        nearest = Utilities.getClosestGoal(start,goals)
-        a_star1(maze,start,nearest)
-        goals.remove(nearest)
-        start = nearest               
+def a_star_subopt(maze, start, goals):
+    currents, expandeds = [],[]
+    order = 1
+    orders = [-1]*len(goals)
+    temp_goals = goals[:]
+    while len(temp_goals) > 0:
+        nearest = Utilities.getClosestGoal(start, temp_goals)
+        for i in range(len(goals)):
+            if goals[i]==nearest:
+                orders[i] = order
+                order += 1
+        current, expanded = a_star1(maze, start, nearest)
+        currents.append(current)
+        expandeds.append(expanded)
+        temp_goals.remove(nearest)
+        start = nearest
+    return currents, expandeds, orders              
                 
                 
 '''
@@ -208,6 +219,39 @@ def printBasicReport(maze, goal, expanded, fileName):
     Utilities.writeMazeToFile(maze, fileName)
 
     print("Path cost: " + str(pathCost) + "\nExpanded: " + str(expanded))
+
+'''
+Uses the output of basic search functions to print a report and print the solution
+to fileName
+'''
+def printBasicReport_subopt(maze, goal, orders,goals,expanded, fileName):
+    pathCost = goal.cost
+    current = goal
+    print orders
+    while (current.parent is not None):
+        #print("Path: (" + str(current.x) + "," + str(current.y) + ")\n")
+        maze[current.x][current.y] = '.'
+        current = current.parent
+    Utilities.writeMazeToFile(maze, fileName)
+
+    return pathCost, expanded
+
+def printAdvancedReport_subopt(maze, currents, orders, goals,expandeds, fileName):
+    tot_path = 0
+    tot_exp = 0
+    for i in range(len(currents)):
+        path, expa = printBasicReport(maze,currents[i],orders[i],goals[i],expandeds[i],fileName)
+        tot_path += path
+        tot_exp += expa
+    print "Path cost: " + str(tot_path) + " Expanded: " + str(tot_exp)
+    num2alpha = dict(zip(range(1, 27), string.ascii_lowercase))
+
+    for i in range(len(orders)):
+        if orders[i] <= 9:
+            maze[goals[i][0]][goals[i][1]] = orders[i]
+        else:
+            maze[goals[i][0]][goals[i][1]] = num2alpha[orders[i]-9]
+    Utilities.writeMazeToFile(maze, fileName)
 
 
 def printAdvancedReport(maze, goal, goals, expanded, fileName):
@@ -249,7 +293,12 @@ def executeBasicSearch(searchFunc, mazeFileName, outputFileName):
     endTime = time.time()
     print("Search took " + str(endTime - startTime) + " seconds.")
 
-
+def executeAdvancedSearch_subopt(searchFunc, mazeFileName, outputFileName):
+    maze = Utilities.parseMaze(mazeFileName)
+    start = Utilities.getStartPoint(maze)
+    goals = Utilities.getGoalPoints(maze)
+    currents, expandeds, orders = searchFunc(maze, start, goals)
+    printAdvancedReport_subopt(maze, currents, orders,goals, expandeds, outputFileName)
 
 def executeAdvancedSearch(searchFunc, mazeFileName, outputFileName):
     startTime = time.time()
