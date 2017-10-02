@@ -1,6 +1,7 @@
 from collections import deque
 import Utilities
-
+import time
+import string
 
 '''
 Node class to represent different nodes in the maze
@@ -136,7 +137,7 @@ def a_star3(maze, start, goals):
     print(goals)
 
     while frontier:
-        print("Expanded: " + str(expanded) + "\n")
+        #print("Expanded: " + str(expanded) + "\n")
         current = Utilities.getLowestHeuristicNode_astar(frontier)
         frontier.remove(current)
         expanded+=1
@@ -153,7 +154,7 @@ def a_star3(maze, start, goals):
             for i in range(len(goals)):
                 if (goals[i][0], goals[i][1]) == (adjacent[0], adjacent[1]):
                     visitedGoals[i] = 1
-            print (visitedGoals)
+            #print (visitedGoals)
 
             notExists = False
             if(adjacent not in visited):
@@ -164,19 +165,19 @@ def a_star3(maze, start, goals):
                 if(notExists):
                     visited[adjacent] = []
 
-                print(notExists)
-                visited[adjacent].append(visitedGoals)
+                #print(notExists)
+                visited[adjacent].append(visitedGoals[:])
 
-                print(visited)
+                #print(visited)
                 # Get all goals that have not yet been visited in the current state
                 unvisitedGoals = [goals[i] for i in range(len(goals)) if visitedGoals[i] == 0]
-                print(unvisitedGoals)
+                #print(unvisitedGoals)
                 minDist = 0
 
                 # If all goals have been visited, then we are at a goal node and our distance to the closest goal node is 0.
                 if(unvisitedGoals != []):
-                    minDist = Utilities.getManhattanDistance(adjacent, Utilities.getClosestGoal(adjacent, unvisitedGoals))
-                frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, minDist, visitedGoals))
+                    minDist = Utilities.getManhattanDistance(adjacent, Utilities.getClosestGoal(adjacent, unvisitedGoals[:]))
+                frontier.append(Node(adjacent[0], adjacent[1], 1 + current.cost, current, minDist, visitedGoals[:]))
 
 
 '''
@@ -213,10 +214,17 @@ def printAdvancedReport(maze, goal, goals, expanded, fileName):
     pathCost = goal.cost
     current = goal
     count = len(goals)
+
+
+    num2alpha = dict(zip(range(10,27), string.ascii_lowercase))
+
     while (current.parent is not None):
         print("Path: (" + str(current.x) + "," + str(current.y) + ")\n")
         if((current.x, current.y) in goals):
-            maze[current.x][current.y] = str(count)
+            if(count >= 10):
+                maze[current.x][current.y] = num2alpha[count]
+            else:
+                maze[current.x][current.y] = count
             count -= 1
         else:
             maze[current.x][current.y] = '.'
@@ -232,20 +240,26 @@ writes to outputFileName as output maze
 '''
 
 def executeBasicSearch(searchFunc, mazeFileName, outputFileName):
+    startTime = time.time()
     maze = Utilities.parseMaze(mazeFileName)
     start = Utilities.getStartPoint(maze)
     goals = Utilities.getGoalPoints(maze)
     goal, expanded = searchFunc(maze, start, goals[0])
     printBasicReport(maze, goal, expanded, outputFileName)
+    endTime = time.time()
+    print("Search took " + str(endTime - startTime) + " seconds.")
 
 
 
 def executeAdvancedSearch(searchFunc, mazeFileName, outputFileName):
+    startTime = time.time()
     maze = Utilities.parseMaze(mazeFileName)
     start = Utilities.getStartPoint(maze)
     goals = Utilities.getGoalPoints(maze)
     goal, expanded = searchFunc(maze, start, goals)
     printAdvancedReport(maze, goal, goals, expanded, outputFileName)
+    endTime = time.time()
+    print("Search took " + str(endTime - startTime) + " seconds.")
 
 #executeBasicSearch(BFS, "bigMaze.txt", "bigMazeSol.txt")
 
