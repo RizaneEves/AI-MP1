@@ -276,7 +276,7 @@ def printAdvancedReport_subopt(maze, currents, orders, goals,expandeds, fileName
     tot_path = 0
     tot_exp = 0
     for i in range(len(currents)):
-        path, expa = printBasicReport(maze,currents[i],orders[i],goals[i],expandeds[i],fileName)
+        path, expa = printBasicReport_subopt(maze,currents[i],orders[i],goals[i],expandeds[i],fileName)
         tot_path += path
         tot_exp += expa
     print "Path cost: " + str(tot_path) + " Expanded: " + str(tot_exp)
@@ -320,34 +320,34 @@ Helper function that executes the basic search functions. Takes mazeFileName as 
 writes to outputFileName as output maze
 '''
 
-def executeBasicSearch(searchFunc, mazeFileName, outputFileName):
-    startTime = time.time()
-    maze = Utilities.parseMaze(mazeFileName)
-    start = Utilities.getStartPoint(maze)
-    goals = Utilities.getGoalPoints(maze)
-    goal, expanded = searchFunc(maze, start, goals[0])
-    printBasicReport(maze, goal, expanded, outputFileName)
-    endTime = time.time()
-    print("Search took " + str(endTime - startTime) + " seconds.")
+def executeSearch(searchFunc, mazeFileName, outputFileName):
+    if(searchFunc == BFS or searchFunc == DFS or searchFunc == GBFS or searchFunc == a_star1):
+        startTime = time.time()
+        maze = Utilities.parseMaze(mazeFileName)
+        start = Utilities.getStartPoint(maze)
+        goals = Utilities.getGoalPoints(maze)
+        goal, expanded = searchFunc(maze, start, goals[0])
+        printBasicReport(maze, goal, expanded, outputFileName)
+        endTime = time.time()
+        print("Search took " + str(endTime - startTime) + " seconds.")
+    if(searchFunc == a_star4):
+        startTime = time.time()
+        maze = Utilities.parseMaze(mazeFileName)
+        start = Utilities.getStartPoint(maze)
+        goals = Utilities.getGoalPoints(maze)
+        goal, expanded = searchFunc(maze, start, goals)
+        printAdvancedReport(maze, goal, goals, expanded, outputFileName)
+        endTime = time.time()
+        print("Search took " + str(endTime - startTime) + " seconds.")
+    if(searchFunc == a_star_subopt):
+        startTime = time.time()
+        maze = Utilities.parseMaze(mazeFileName)
+        start = Utilities.getStartPoint(maze)
+        goals = Utilities.getGoalPoints(maze)
+        currents, expandeds, orders = searchFunc(maze, start, goals)
+        printAdvancedReport_subopt(maze, currents, orders,goals, expandeds, outputFileName)
+        endTime = time.time()
+        print("Search took " + str(endTime - startTime) + " seconds.")
 
-def executeAdvancedSearch_subopt(searchFunc, mazeFileName, outputFileName):
-    maze = Utilities.parseMaze(mazeFileName)
-    start = Utilities.getStartPoint(maze)
-    goals = Utilities.getGoalPoints(maze)
-    currents, expandeds, orders = searchFunc(maze, start, goals)
-    printAdvancedReport_subopt(maze, currents, orders,goals, expandeds, outputFileName)
 
-def executeAdvancedSearch(searchFunc, mazeFileName, outputFileName):
-    startTime = time.time()
-    maze = Utilities.parseMaze(mazeFileName)
-    start = Utilities.getStartPoint(maze)
-    goals = Utilities.getGoalPoints(maze)
-    goal, expanded = searchFunc(maze, start, goals)
-    printAdvancedReport(maze, goal, goals, expanded, outputFileName)
-    endTime = time.time()
-    print("Search took " + str(endTime - startTime) + " seconds.")
-
-#executeBasicSearch(BFS, "bigMaze.txt", "bigMazeSol.txt")
-
-
-executeAdvancedSearch(a_star4, "mediumSearch.txt", "mediumSearchSol.txt")
+executeSearch(a_star_subopt, "mediumSearch.txt", "mediumSearchSol.txt")
